@@ -1,6 +1,29 @@
 // Importa Chart.js como ES Module — garante disponibilidade no script de módulo
-import Chart from 'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/auto/+esm';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+// ===== Import Chart.js (ESM) + registro explícito =====
+import {
+  Chart,
+  LineElement, LineController,
+  PointElement,
+  BarElement, BarController,
+  ArcElement,
+  LinearScale, CategoryScale,
+  Tooltip, Legend, Filler,
+} from 'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/+esm';
+
+// registra tudo que os gráficos usam
+Chart.register(
+  LineElement, LineController,
+  PointElement,
+  BarElement, BarController,
+  ArcElement,
+  LinearScale, CategoryScale,
+  Tooltip, Legend, Filler
+);
+
+// (opcional) debug para garantir que é função
+console.debug('Chart typeof:', typeof Chart);
 
 const SUPABASE_URL = 'https://retuujyjqylsyioargmh.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJldHV1anlqcXlsc3lpb2FyZ21oIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MDI3MzIyOCwiZXhwIjoyMDY1ODQ5MjI4fQ._gXWfexTRD_Clwps3aXPtGCTv_e10pZQpsOFIQQPMds';
@@ -91,7 +114,6 @@ function applyFilter() {
   renderTable(filtrados);
   updateKPIs(filtrados);
   renderCharts(filtrados);
-  updateKPIs(filtrados);
 }
 
 // Formatador BRL
@@ -210,17 +232,4 @@ function renderCharts(pedidos) {
   }
 
   console.debug('[charts] linhas:', lineLabels.length, 'empresas:', pieLabels.length);
-}
-
-function updateKPIs(pedidos){
-  const toNum = (v) => (typeof v === 'number' ? v : parseFloat(String(v).replace(',', '.')) || 0);
-  const total = (pedidos || []).reduce((sum, p) => sum + toNum(p.PDOC_VLR_TOTAL), 0);
-  const qtd = pedidos?.length || 0;
-  const ticket = qtd ? total / qtd : 0;
-  const empresas = new Set((pedidos || []).map(p => p.CEMP_PK).filter(Boolean)).size;
-  const fmt = (n) => n.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
-  document.getElementById('kpi-faturamento').textContent = fmt(total);
-  document.getElementById('kpi-ticket').textContent = fmt(ticket);
-  document.getElementById('kpi-pedidos').textContent = qtd;
-  document.getElementById('kpi-empresas').textContent = empresas;
 }
