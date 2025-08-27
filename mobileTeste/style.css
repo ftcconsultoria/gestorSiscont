@@ -25,3 +25,14 @@ th, td {
 th {
   background-color: #eee;
 }
+
+canvas {
+  display: block;
+  max-width: 100%;
+  width: 100%;
+  height: 280px; /* garante altura visível */
+  margin-top: 1rem;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
