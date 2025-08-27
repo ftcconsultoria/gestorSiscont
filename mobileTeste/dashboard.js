@@ -4,31 +4,36 @@ const SUPABASE_URL = 'https://retuujyjqylsyioargmh.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJldHV1anlqcXlsc3lpb2FyZ21oIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MDI3MzIyOCwiZXhwIjoyMDY1ODQ5MjI4fQ._gXWfexTRD_Clwps3aXPtGCTv_e10pZQpsOFIQQPMds';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+let allPedidos = [];
+
 async function loadPedidos() {
   const { data, error } = await supabase
     .from('pedidos_local')
     .select('*')
     .limit(50);
-
-  const tbody = document.querySelector('#pedidosTable tbody');
-  tbody.innerHTML = '';
-
   if (error || !Array.isArray(data)) {
     console.error('Erro ao carregar pedidos:', error);
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td colspan="7">Erro ao carregar pedidos</td>`;
-    tbody.appendChild(tr);
+    const tbody = document.querySelector('#pedidosTable tbody');
+    tbody.innerHTML = `<tr><td colspan="7">Erro ao carregar pedidos</td></tr>`;
     return;
   }
 
-  if (data.length === 0) {
+  allPedidos = data;
+  applyFilter();
+}
+
+function renderTable(pedidos) {
+  const tbody = document.querySelector('#pedidosTable tbody');
+  tbody.innerHTML = '';
+
+  if (!Array.isArray(pedidos) || pedidos.length === 0) {
     const tr = document.createElement('tr');
     tr.innerHTML = `<td colspan="7">Nenhum pedido encontrado</td>`;
     tbody.appendChild(tr);
     return;
   }
 
-  data.forEach(ped => {
+  pedidos.forEach(ped => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${ped.PDOC_UUID}</td>
@@ -41,11 +46,34 @@ async function loadPedidos() {
     `;
     tbody.appendChild(tr);
   });
+}
 
-  renderCharts(data);
+function applyFilter() {
+  const select = document.getElementById('horaFiltro');
+  const hora = select?.value;
+  let filtrados = allPedidos;
+  if (hora) {
+    filtrados = allPedidos.filter(p => {
+      const h = (p.PDOC_HR_EMISSAO || '').toString().slice(0, 2);
+      return h === hora;
+    });
+  }
+  renderTable(filtrados);
+  renderCharts(filtrados);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  const select = document.getElementById('horaFiltro');
+  if (select) {
+    for (let i = 0; i < 24; i++) {
+      const opt = document.createElement('option');
+      opt.value = String(i).padStart(2, '0');
+      opt.textContent = opt.value;
+      select.appendChild(opt);
+    }
+    select.addEventListener('change', applyFilter);
+  }
+
   loadPedidos();
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js');
