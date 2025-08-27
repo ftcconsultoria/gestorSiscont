@@ -1,5 +1,5 @@
 // Importa Chart.js como ES Module — garante disponibilidade no script de módulo
-import Chart from 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/+esm';
+import Chart from 'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/auto/+esm';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
 const SUPABASE_URL = 'https://retuujyjqylsyioargmh.supabase.co';
