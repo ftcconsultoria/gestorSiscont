@@ -1,0 +1,9 @@
+{
+  "name": "mobileTeste",
+  "short_name": "mobileTeste",
+  "start_url": "/mobileTeste/index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "description": "Dashboard de pedidos",
+  "icons": []
+}
