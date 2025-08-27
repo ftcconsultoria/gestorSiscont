@@ -10,13 +10,24 @@ async function loadPedidos() {
     .select('*')
     .limit(50);
 
-  if (error) {
+  const tbody = document.querySelector('#pedidosTable tbody');
+  tbody.innerHTML = '';
+
+  if (error || !Array.isArray(data)) {
     console.error('Erro ao carregar pedidos:', error);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td colspan="7">Erro ao carregar pedidos</td>`;
+    tbody.appendChild(tr);
     return;
   }
 
-  const tbody = document.querySelector('#pedidosTable tbody');
-  tbody.innerHTML = '';
+  if (data.length === 0) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td colspan="7">Nenhum pedido encontrado</td>`;
+    tbody.appendChild(tr);
+    return;
+  }
+
   data.forEach(ped => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
