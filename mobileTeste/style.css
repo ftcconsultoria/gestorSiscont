@@ -51,6 +51,12 @@ body {
   border-radius:.5rem;
   background: #fff;
 }
+.filters input{
+  padding:.45rem .6rem;
+  border:1px solid var(--border);
+  border-radius:.5rem;
+  background:#fff;
+}
 
 /* Container */
 .container{

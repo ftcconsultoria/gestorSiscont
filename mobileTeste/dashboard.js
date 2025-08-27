@@ -35,6 +35,12 @@ document.addEventListener('DOMContentLoaded', () => {
     select.addEventListener('change', applyFilter);
   }
 
+  // evento para filtro de data
+  const dataInput = document.getElementById('dataFiltro');
+  if (dataInput) {
+    dataInput.addEventListener('change', applyFilter);
+  }
+
   // carrega dados
   loadPedidos();
 
@@ -89,14 +95,21 @@ function renderTable(pedidos) {
 }
 
 function applyFilter() {
-  const select = document.getElementById('horaFiltro');
-  const hora = select?.value ?? '';
+  const hora = document.getElementById('horaFiltro')?.value ?? '';
+  const data = document.getElementById('dataFiltro')?.value ?? '';
   let filtrados = allPedidos;
 
   if (hora) {
-    filtrados = allPedidos.filter(p => {
+    filtrados = filtrados.filter(p => {
       const h = (p.PDOC_HR_EMISSAO || '').toString().slice(0, 2);
       return h === hora;
+    });
+  }
+
+  if (data) {
+    filtrados = filtrados.filter(p => {
+      const d = (p.PDOC_DT_EMISSAO || '').toString().slice(0, 10);
+      return d === data;
     });
   }
 
