@@ -59,6 +59,39 @@ body {
   padding: 0 1rem 2rem;
 }
 
+/* KPIs */
+.kpi-row{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(200px,1fr));
+  gap:1rem;
+  margin-bottom:1rem;
+}
+.kpi-card{
+  display:flex;
+  align-items:center;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:10px;
+  box-shadow:var(--shadow);
+  padding:1rem;
+}
+.kpi-icon{
+  font-size:1.5rem;
+  margin-right:.75rem;
+}
+.kpi-body{
+  display:flex;
+  flex-direction:column;
+}
+.kpi-label{
+  font-size:.85rem;
+  color:var(--muted);
+}
+.kpi-value{
+  font-size:1.3rem;
+  font-weight:700;
+}
+
 /* Card */
 .card{
   background: var(--card);

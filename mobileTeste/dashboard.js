@@ -90,6 +90,7 @@ function applyFilter() {
 
   renderTable(filtrados);
   renderCharts(filtrados);
+  updateKPIs(filtrados);
 }
 
 function renderCharts(pedidos) {
@@ -182,4 +183,17 @@ function renderCharts(pedidos) {
   }
 
   console.debug('[charts] linhas:', lineLabels.length, 'empresas:', pieLabels.length);
+}
+
+function updateKPIs(pedidos){
+  const toNum = (v) => (typeof v === 'number' ? v : parseFloat(String(v).replace(',', '.')) || 0);
+  const total = (pedidos || []).reduce((sum, p) => sum + toNum(p.PDOC_VLR_TOTAL), 0);
+  const qtd = pedidos?.length || 0;
+  const ticket = qtd ? total / qtd : 0;
+  const empresas = new Set((pedidos || []).map(p => p.CEMP_PK).filter(Boolean)).size;
+  const fmt = (n) => n.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('kpi-faturamento').textContent = fmt(total);
+  document.getElementById('kpi-ticket').textContent = fmt(ticket);
+  document.getElementById('kpi-pedidos').textContent = qtd;
+  document.getElementById('kpi-empresas').textContent = empresas;
 }
