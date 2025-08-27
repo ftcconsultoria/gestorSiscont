@@ -1,29 +1,18 @@
 // Importa Chart.js como ES Module — garante disponibilidade no script de módulo
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-// ===== Import Chart.js (ESM) + registro explícito =====
-import {
-  Chart,
-  LineElement, LineController,
-  PointElement,
-  BarElement, BarController,
-  ArcElement,
-  LinearScale, CategoryScale,
-  Tooltip, Legend, Filler,
-} from 'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/+esm';
+/* ===== Chart.js ESM: import único e registro automático ===== */
+// limpa possível poluição global deixada por UMD antigo
+if (typeof window !== 'undefined' && 'Chart' in window) {
+  try { delete window.Chart; } catch (_) { /* ignore */ }
+}
 
-// registra tudo que os gráficos usam
-Chart.register(
-  LineElement, LineController,
-  PointElement,
-  BarElement, BarController,
-  ArcElement,
-  LinearScale, CategoryScale,
-  Tooltip, Legend, Filler
-);
+// importa o pacote ESM e registra tudo (controllers/elements/scales)
+import { Chart, registerables } from 'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/+esm';
+Chart.register(...registerables);
 
-// (opcional) debug para garantir que é função
-console.debug('Chart typeof:', typeof Chart);
+// (debug) garanta que veio uma função construtora
+console.debug('Chart typeof:', typeof Chart); // deve imprimir "function"
 
 const SUPABASE_URL = 'https://retuujyjqylsyioargmh.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJldHV1anlqcXlsc3lpb2FyZ21oIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MDI3MzIyOCwiZXhwIjoyMDY1ODQ5MjI4fQ._gXWfexTRD_Clwps3aXPtGCTv_e10pZQpsOFIQQPMds';
