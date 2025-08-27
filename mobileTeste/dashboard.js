@@ -52,52 +52,84 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+let charts = {}; // para destruir e recriar ao atualizar dados
+
 function renderCharts(pedidos) {
-  if (!Array.isArray(pedidos) || typeof Chart === 'undefined') {
-    return;
+  if (typeof Chart === 'undefined') return;
+
+  const toNum = (v) => (typeof v === 'number' ? v : parseFloat(v) || 0);
+  const toDateLabel = (d) => {
+    if (!d) return 'Sem data';
+    const dt = new Date(d);
+    return isNaN(dt) ? String(d) : dt.toISOString().slice(0,10);
+  };
+
+  // --- Agregações ---
+  const byDate = {};
+  const byEmpresa = {};
+
+  (pedidos || []).forEach(p => {
+    const total = toNum(p.PDOC_VLR_TOTAL);
+    const d = toDateLabel(p.PDOC_DT_EMISSAO);
+    const emp = p.CEMP_PK ?? 'Sem empresa';
+    byDate[d] = (byDate[d] || 0) + total;
+    byEmpresa[emp] = (byEmpresa[emp] || 0) + total;
+  });
+
+  const lineLabels = Object.keys(byDate).sort();
+  const lineData = lineLabels.map(l => byDate[l]);
+  const pieLabels  = Object.keys(byEmpresa);
+  const pieData    = pieLabels.map(l => byEmpresa[l]);
+
+  // destrói instâncias anteriores (evita sobreposição)
+  Object.values(charts).forEach(c => c?.destroy());
+  charts = {};
+
+  // opções padrão para evitar altura 0 e manter responsivo
+  const baseOpts = { responsive: true, maintainAspectRatio: false };
+
+  // --- LINE ---
+  const lineEl = document.getElementById('lineChart');
+  if (lineEl) {
+    charts.line = new Chart(lineEl.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: lineLabels,
+        datasets: [{ label: 'Total por Data', data: lineData, tension: 0.25 }]
+      },
+      options: baseOpts
+    });
   }
 
-  // Line chart: total value by date
-  const totalsByDate = {};
-  pedidos.forEach(p => {
-    const date = p.PDOC_DT_EMISSAO || 'Sem data';
-    const total = parseFloat(p.PDOC_VLR_TOTAL) || 0;
-    totalsByDate[date] = (totalsByDate[date] || 0) + total;
-  });
-  const lineLabels = Object.keys(totalsByDate).sort();
-  const lineData = lineLabels.map(l => totalsByDate[l]);
-  const lineCtx = document.getElementById('lineChart').getContext('2d');
-  new Chart(lineCtx, {
-    type: 'line',
-    data: {
-      labels: lineLabels,
-      datasets: [{
-        label: 'Total por Data',
-        data: lineData,
-        borderColor: 'blue',
-        fill: false
-      }]
-    }
-  });
+  // --- PIE ---
+  const pieEl = document.getElementById('pieChart');
+  if (pieEl) {
+    const colors = pieLabels.length
+      ? pieLabels.map((_, i) => `hsl(${(i*360)/Math.max(1,pieLabels.length)},70%,60%)`)
+      : ['#ccc'];
+    charts.pie = new Chart(pieEl.getContext('2d'), {
+      type: 'pie',
+      data: { labels: pieLabels, datasets: [{ data: pieData, backgroundColor: colors }] },
+      options: baseOpts
+    });
+  }
 
-  // Pie chart: total value by company
-  const totalsByEmpresa = {};
-  pedidos.forEach(p => {
-    const empresa = p.CEMP_PK || 'Sem empresa';
-    const total = parseFloat(p.PDOC_VLR_TOTAL) || 0;
-    totalsByEmpresa[empresa] = (totalsByEmpresa[empresa] || 0) + total;
-  });
-  const pieLabels = Object.keys(totalsByEmpresa);
-  const pieData = pieLabels.map(l => totalsByEmpresa[l]);
-  const pieCtx = document.getElementById('pieChart').getContext('2d');
-  new Chart(pieCtx, {
-    type: 'pie',
-    data: {
-      labels: pieLabels,
-      datasets: [{
-        data: pieData,
-        backgroundColor: pieLabels.map((_, i) => `hsl(${(i * 360) / pieLabels.length}, 70%, 60%)`)
-      }]
-    }
-  });
+  // --- BAR (NOVO) ---
+  const barEl = document.getElementById('barChart');
+  if (barEl) {
+    charts.bar = new Chart(barEl.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: pieLabels,
+        datasets: [{ label: 'Total por Empresa', data: pieData }]
+      },
+      options: {
+        ...baseOpts,
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+  }
+
+  // debug: ajuda a confirmar dados
+  console.debug('[charts] linhas:', lineLabels.length, 'empresas:', pieLabels.length);
 }

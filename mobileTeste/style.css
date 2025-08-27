@@ -26,11 +26,12 @@ th {
   background-color: #eee;
 }
 
+/* deixa os canvases visíveis e responsivos */
 canvas {
   display: block;
-  max-width: 100%;
   width: 100%;
-  height: 280px; /* garante altura visível */
+  max-width: 100%;
+  height: 320px;      /* altura garantida */
   margin-top: 1rem;
   background: #fff;
   border: 1px solid #ddd;
