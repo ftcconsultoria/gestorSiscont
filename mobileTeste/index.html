@@ -7,32 +7,57 @@
   <link rel="stylesheet" href="style.css">
   <title>Dashboard Pedidos</title>
 </head>
-  <body>
-  <h1>Dashboard de Pedidos</h1>
-  <div id="filtros">
-    <label for="horaFiltro">Filtrar por hora:</label>
-    <select id="horaFiltro">
-      <option value="">Todas</option>
-    </select>
-  </div>
-  <table id="pedidosTable">
-    <thead>
-      <tr>
-        <th>UUID</th>
-        <th>PK</th>
-        <th>Empresa</th>
-        <th>Data</th>
-        <th>Hora</th>
-        <th>Total</th>
-        <th>Vendedor</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-    <canvas id="lineChart"></canvas>
-    <canvas id="pieChart"></canvas>
-    <canvas id="barChart"></canvas> <!-- NOVO -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script type="module" src="dashboard.js"></script>
-  </body>
+<body>
+  <header class="topbar">
+    <h1>Dashboard de Pedidos</h1>
+    <div class="filters">
+      <label for="horaFiltro">Hora:</label>
+      <select id="horaFiltro">
+        <option value="">Todas</option>
+      </select>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2 class="card-title">Lista de Pedidos</h2>
+      <div class="table-wrapper">
+        <table id="pedidosTable">
+          <thead>
+            <tr>
+              <th>UUID</th>
+              <th>PK</th>
+              <th>Empresa</th>
+              <th>Data</th>
+              <th>Hora</th>
+              <th>Total</th>
+              <th>Vendedor</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="grid-charts">
+      <div class="card">
+        <h2 class="card-title">Total por Data (Linha)</h2>
+        <div class="chart-box"><canvas id="lineChart"></canvas></div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Total por Empresa (Pizza)</h2>
+        <div class="chart-box"><canvas id="pieChart"></canvas></div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Total por Empresa (Barras)</h2>
+        <div class="chart-box"><canvas id="barChart"></canvas></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Removido o UMD. Vamos importar como ES Module dentro do dashboard.js -->
+  <script type="module" src="dashboard.js?v=3"></script>
+</body>
 </html>
