@@ -89,12 +89,39 @@ function applyFilter() {
   }
 
   renderTable(filtrados);
+  updateKPIs(filtrados);
   renderCharts(filtrados);
+}
+
+// Formatador BRL
+const fmtBRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+// Converte número
+const toNum = (v) => (typeof v === 'number' ? v : parseFloat(String(v).replace(',', '.')) || 0);
+
+// Atualiza os 4 cards de KPI
+function updateKPIs(pedidos){
+  const total = (pedidos || []).reduce((s, p) => s + toNum(p.PDOC_VLR_TOTAL), 0);
+  const qtd   = (pedidos || []).length;
+  const ticket = qtd ? (total / qtd) : 0;
+
+  const empresasSet = new Set((pedidos || []).map(p => p.CEMP_PK ?? '—'));
+  const empresas = empresasSet.size;
+
+  // injeta na UI
+  const elFat = document.getElementById('kpi-faturamento');
+  const elTic = document.getElementById('kpi-ticket');
+  const elQtd = document.getElementById('kpi-pedidos');
+  const elEmp = document.getElementById('kpi-empresas');
+
+  if (elFat) elFat.textContent = fmtBRL.format(total);
+  if (elTic) elTic.textContent = fmtBRL.format(ticket);
+  if (elQtd) elQtd.textContent = String(qtd);
+  if (elEmp) elEmp.textContent = String(empresas);
 }
 
 function renderCharts(pedidos) {
   // helper numérico e de data
-  const toNum = (v) => (typeof v === 'number' ? v : parseFloat(String(v).replace(',', '.')) || 0);
   const toDateLabel = (d) => {
     if (!d) return 'Sem data';
     const dt = new Date(d);
