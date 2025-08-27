@@ -24,7 +24,9 @@ async function loadPedidos() {
       <td>${ped.PDOC_PK}</td>
       <td>${ped.CEMP_PK}</td>
       <td>${ped.PDOC_DT_EMISSAO ?? ''}</td>
+      <td>${ped.PDOC_HR_EMISSAO ?? ''}</td>
       <td>${ped.PDOC_VLR_TOTAL ?? ''}</td>
+      <td>${ped.CCOT_VEND_PK ?? ''}</td>
     `;
     tbody.appendChild(tr);
   });
