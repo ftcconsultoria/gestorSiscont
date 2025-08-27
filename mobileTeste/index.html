@@ -12,12 +12,21 @@
   <header class="topbar">
     <h1>Dashboard de Pedidos</h1>
     <div class="filters">
-      <label for="dataFiltro">Data:</label>
-      <input type="date" id="dataFiltro">
+      <label for="dataInicio">Período:</label>
+      <input type="date" id="dataInicio">
+      <span>até</span>
+      <input type="date" id="dataFim">
       <label for="horaFiltro">Hora:</label>
       <select id="horaFiltro">
         <option value="">Todas</option>
       </select>
+      <label for="vendedorFiltro">Vendedor:</label>
+      <select id="vendedorFiltro">
+        <option value="">Todos</option>
+      </select>
+      <button id="btnReload" type="button">Aplicar</button>
+      <button id="btnCarregarMais" type="button">Carregar mais</button>
+      <button id="btnCarregarTudo" type="button">Carregar tudo</button>
     </div>
   </header>
 
@@ -59,17 +68,14 @@
     <!-- /KPIs -->
 
     <section class="card">
-      <h2 class="card-title">Lista de Pedidos</h2>
+      <h2 id="listaTitulo" class="card-title">Lista de Pedidos <span id="listaAviso" class="badge">Exibindo 2 (clique para ver 20)</span></h2>
       <div class="table-wrapper">
         <table id="pedidosTable">
           <thead>
             <tr>
-              <th>UUID</th>
-              <th>PK</th>
-              <th>Empresa</th>
-              <th>Data</th>
-              <th>Hora</th>
-              <th>Total</th>
+              <th>Num. Pedido</th>
+              <th>Data de Emissão</th>
+              <th>Total (R$)</th>
               <th>Vendedor</th>
             </tr>
           </thead>
@@ -78,15 +84,17 @@
       </div>
     </section>
 
+    <!-- Primeira linha: Pizza (Top 10 Produtos) -->
+    <section class="card">
+      <h2 class="card-title">Top 10 Produtos (Barras)</h2>
+      <div class="chart-box"><canvas id="pieChart"></canvas></div>
+    </section>
+
+    <!-- Segunda linha: Linha e Barras lado a lado -->
     <section class="grid-charts">
       <div class="card">
         <h2 class="card-title">Total por Data (Linha)</h2>
         <div class="chart-box"><canvas id="lineChart"></canvas></div>
-      </div>
-
-      <div class="card">
-        <h2 class="card-title">Total por Empresa (Pizza)</h2>
-        <div class="chart-box"><canvas id="pieChart"></canvas></div>
       </div>
 
       <div class="card">
