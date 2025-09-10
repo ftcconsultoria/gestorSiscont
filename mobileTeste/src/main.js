@@ -34,11 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Eventos período e aplicar
   const dataIni = document.getElementById('dataInicio');
   const dataFim = document.getElementById('dataFim');
-  const btnReload = document.getElementById('btnReload');
+  const btnConsultar = document.getElementById('btnConsultar');
   const btnMesAtual = document.getElementById('btnMesAtual');
-  if (dataIni) dataIni.addEventListener('change', () => loadPedidos(true));
-  if (dataFim) dataFim.addEventListener('change', () => loadPedidos(true));
-  if (btnReload) btnReload.addEventListener('click', () => loadPedidos(true));
+  if (btnConsultar) btnConsultar.addEventListener('click', () => loadPedidos(true));
   if (btnMesAtual) btnMesAtual.addEventListener('click', () => {
     const isoFromDate = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     const now = new Date();
@@ -46,7 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     if (dataIni) dataIni.value = toBRDateShort(isoFromDate(startOfMonth));
     if (dataFim) dataFim.value = toBRDateShort(isoFromDate(endOfMonth));
-    loadPedidos(true);
   });
   // Máscara dd/mm/yy
   attachBRDateMask(dataIni);
@@ -90,9 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnMore) btnMore.addEventListener('click', () => loadPedidos(false));
   const btnAll = document.getElementById('btnCarregarTudo');
   if (btnAll) btnAll.addEventListener('click', () => loadAllPedidos());
-
-  // Carrega inicial
-  loadPedidos(true);
 
   // Bootstrap theme variable toggle (data-bs-theme)
   try{
@@ -220,13 +214,13 @@ async function loadPedidos(reset){
 async function loadAllPedidos(){
   const btnAll = document.getElementById('btnCarregarTudo');
   const btnMore = document.getElementById('btnCarregarMais');
-  const btnReload = document.getElementById('btnReload');
+  const btnConsultar = document.getElementById('btnConsultar');
   const proceed = window.confirm('Aviso: carregar tudo pode ser lento e consumir muitos dados. Deseja continuar?');
   if (!proceed) return;
   try{
     if (btnAll) { btnAll.disabled = true; btnAll.textContent = 'Carregando tudo...'; }
     if (btnMore) { btnMore.disabled = true; }
-    if (btnReload) { btnReload.disabled = true; }
+    if (btnConsultar) { btnConsultar.disabled = true; }
 
     await loadPedidos(true);
     while (state.hasMore) {
@@ -234,7 +228,7 @@ async function loadAllPedidos(){
       await new Promise(r => setTimeout(r, 0));
     }
   } finally {
-    if (btnReload) btnReload.disabled = false;
+    if (btnConsultar) btnConsultar.disabled = false;
     if (btnAll) {
       btnAll.disabled = !state.hasMore;
       btnAll.textContent = state.hasMore ? 'Carregar tudo' : 'Tudo carregado';
