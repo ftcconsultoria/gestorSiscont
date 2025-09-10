@@ -26,20 +26,8 @@ import { toNum, fmtBRL, toBRDateShort, brShortToISO } from './utils/format.js';
 let ordersSparkRange = 7;
 let monthsRange = 6;
 
-// Boot
-import { initAuth, signOut } from './auth/authUI.js';
-import { fetchEmpresasDoUsuario } from './repositories/authRepo.js';
-import { fetchEmpresasInfoByIds, fetchEmpresasRazaoByIds } from './repositories/empresasRepo.js';
-
 document.addEventListener('DOMContentLoaded', () => {
   try{ showDebugBanner(); }catch(_){ }
-  // Aguarda autenticacao antes de iniciar a UI
-  initAuth(() => {
-  // Navbar: seletor de empresa + sair
-  try { initEmpresaTopSelect(); } catch(_) {}
-  try { updateEmpresaBadgeFromStorage(); } catch(_) {}
-  try { initSignOutButton(); } catch(_) {}
-  try { initSidebarNav(); } catch(_) {}
   // Filtro hora
   initHourFilter(document.getElementById('horaFiltro'), applyAndRender);
 
@@ -148,12 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Weather + Feriados
   try { initWeatherAndHolidays(); } catch(_) { /* ignore */ }
-  }); // fim initAuth
 });
-
-function getSavedUser(){
-  try { return JSON.parse(localStorage.getItem('appUser')||'null'); } catch { return null; }
-}
 
 function isDebugAuth(){
   try{
@@ -189,177 +172,6 @@ function showDebugBanner(){
   document.body.style.paddingTop = (cur + 40) + 'px';
 }
 
-function updateEmpresaBadgeFromStorage(){
-  try{
-    const badge = document.getElementById('empresaNomeBadge');
-    if (!badge) return;
-    const saved = JSON.parse(localStorage.getItem('empresaAtual')||'null');
-    const id = (saved?.CEMP_PK !== undefined && saved?.CEMP_PK !== null) ? String(saved.CEMP_PK) : '';
-    const name = saved?.name || saved?.CEMP_NOME_FANTASIA || saved?.CEMP_FANTASIA || saved?.CEMP_RAZAO || '';
-    const razao = saved?.CEMP_RAZAO || '';
-    if (name || id){
-      badge.textContent = name ? `${name}${id?` (CEMP_PK ${id})`:''}` : `Empresa ${id}`;
-      if (razao) { try { badge.title = `Razão Social: ${razao}`; } catch(_){} }
-      badge.classList.remove('d-none');
-    } else {
-      badge.textContent = '';
-      badge.classList.add('d-none');
-    }
-  }catch{}
-}
-
-async function initEmpresaTopSelect(){
-  const user = getSavedUser();
-  const select = document.getElementById('empresaTopSelect');
-  const selectMobile = document.getElementById('empresaTopSelectMobile');
-  if (!select && !selectMobile) return;
-  if (!user){
-    if (select) select.classList.add('d-none');
-    if (selectMobile) selectMobile.closest('.mb-3')?.classList.add('d-none');
-    return;
-  }
-
-  let empresas = [];
-  try {
-    empresas = await fetchEmpresasDoUsuario({ usuarioId: user?.id, email: user?.login_email || user?.email });
-  } catch (e){ console.warn('Erro carregando empresas:', e); }
-
-  if (!empresas || empresas.length === 0){
-    if (select) select.classList.add('d-none');
-    if (selectMobile) selectMobile.closest('.mb-3')?.classList.add('d-none');
-    return;
-  }
-
-  const fillSelect = (sel, labelsMap, razoesMap) => {
-    if (!sel) return;
-    sel.innerHTML = '';
-    empresas.forEach(e => {
-      const opt = document.createElement('option');
-      opt.value = String(e.CEMP_PK);
-      const label = labelsMap?.get(String(e.CEMP_PK)) || labelsMap?.get(Number(e.CEMP_PK));
-      const fantasia = e?.CEMP_NOME_FANTASIA || e?.CEMP_FANTASIA || e?.NOME_FANTASIA || '';
-      const base = label || fantasia || `Empresa`;
-      // Exibir CEMP_PK e Nome Fantasia
-      opt.textContent = `${e.CEMP_PK} - ${base}`;
-      const razao = (razoesMap?.get(String(e.CEMP_PK)) || razoesMap?.get(Number(e.CEMP_PK)) || e?.CEMP_RAZAO || '').toString();
-      if (razao) opt.title = `Razão Social: ${razao}`;
-      sel.appendChild(opt);
-    });
-  };
-  // Busca nomes das empresas, se possível
-  let labels = new Map();
-  let razoes = new Map();
-  try{
-    const ids = empresas.map(e => e.CEMP_PK).filter(v => v !== null && v !== undefined);
-    const info = await fetchEmpresasInfoByIds(ids);
-    (info || []).forEach(row => {
-      const name = row?.name || '';
-      const k = row?.CEMP_PK;
-      if (k !== undefined && k !== null && name){
-        labels.set(String(k), name);
-        const num = Number(k);
-        if (!Number.isNaN(num)) labels.set(num, name);
-      }
-    });
-  }catch(_){ /* ignore */ }
-
-  // Sobrescreve labels com CEMP_RAZAO da CADE_EMPRESA quando disponvel
-  try{
-    const ids = empresas.map(e => e.CEMP_PK).filter(v => v !== null && v !== undefined);
-    const infoRazao = await fetchEmpresasRazaoByIds(ids);
-    (infoRazao || []).forEach(row => {
-      const k = row?.CEMP_PK; const name = row?.name || '';
-      if (k !== undefined && k !== null && name){
-        labels.set(String(k), name);
-        const num = Number(k); if (!Number.isNaN(num)) labels.set(num, name);
-      }
-      const rz = row?.razao || '';
-      if (k !== undefined && k !== null && rz){
-        razoes.set(String(k), rz);
-        const num = Number(k); if (!Number.isNaN(num)) razoes.set(num, rz);
-      }
-    });
-  }catch(_){ /* ignore */ }
-
-  fillSelect(select, labels, razoes);
-  fillSelect(selectMobile, labels, razoes);
-
-  let currentCemp = null;
-  try {
-    const saved = JSON.parse(localStorage.getItem('empresaAtual')||'null');
-    if (saved?.CEMP_PK !== undefined){
-      currentCemp = String(saved.CEMP_PK);
-    }
-  } catch {}
-  if (!currentCemp && empresas.length){
-    localStorage.setItem('empresaAtual', JSON.stringify(empresas[0]));
-    currentCemp = String(empresas[0].CEMP_PK);
-  }
-  if (select && currentCemp) select.value = currentCemp;
-  if (selectMobile && currentCemp) selectMobile.value = currentCemp;
-
-  // Preenche nome salvo e badge
-  try{
-    if (currentCemp){
-      const label = labels.get(currentCemp) || labels.get(Number(currentCemp));
-      const razao = razoes.get(currentCemp) || razoes.get(Number(currentCemp));
-      if (label || razao){
-        const saved = JSON.parse(localStorage.getItem('empresaAtual')||'null') || {};
-        if (label) saved.name = label;
-        saved.CEMP_PK = Number(currentCemp);
-        if (razao) saved.CEMP_RAZAO = razao;
-        localStorage.setItem('empresaAtual', JSON.stringify(saved));
-      }
-    }
-  }catch{}
-  updateEmpresaBadgeFromStorage();
-
-  const onChange = (value) => {
-    const CEMP_PK = Number(value);
-    const chosen = empresas.find(e => String(e.CEMP_PK) === String(CEMP_PK)) || { CEMP_PK };
-    const label = labels.get(String(CEMP_PK)) || labels.get(Number(CEMP_PK));
-    const payload = { ...chosen };
-    const fantasia = chosen?.CEMP_NOME_FANTASIA || chosen?.CEMP_FANTASIA || chosen?.NOME_FANTASIA || '';
-    const finalName = label || fantasia;
-    if (finalName) payload.name = finalName;
-    const rz = razoes.get(String(CEMP_PK)) || razoes.get(Number(CEMP_PK)) || chosen?.CEMP_RAZAO || '';
-    if (rz) payload.CEMP_RAZAO = rz;
-    localStorage.setItem('empresaAtual', JSON.stringify(payload));
-    if (select && select.value !== String(CEMP_PK)) select.value = String(CEMP_PK);
-    if (selectMobile && selectMobile.value !== String(CEMP_PK)) selectMobile.value = String(CEMP_PK);
-    loadPedidos(true);
-    updateEmpresaBadgeFromStorage();
-  };
-
-  if (select){ select.classList.remove('d-none'); select.addEventListener('change', () => onChange(select.value)); }
-  if (selectMobile){ selectMobile.closest('.mb-3')?.classList.remove('d-none'); selectMobile.addEventListener('change', () => onChange(selectMobile.value)); }
-}
-
-function initSignOutButton(){
-  const bind = (id) => {
-    const btn = document.getElementById(id);
-    if (!btn) return;
-    btn.addEventListener('click', () => { signOut(); });
-  };
-  bind('btnSignOut');
-  bind('btnSignOutMobile');
-}
-
-function initSidebarNav(){
-  const sidebar = document.getElementById('sidebar');
-  if (!sidebar) return;
-  const links = sidebar.querySelectorAll('a.offcanvas-link[data-target]');
-  links.forEach(link => {
-    link.addEventListener('click', (e) => {
-      const targetId = link.getAttribute('data-target');
-      const section = document.getElementById(targetId);
-      if (!targetId || !section) return;
-      e.preventDefault();
-      try{
-        const off = window.bootstrap?.Offcanvas?.getOrCreateInstance(sidebar);
-        off?.hide();
-      }catch(_){ /* ignore */ }
-      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });
 }

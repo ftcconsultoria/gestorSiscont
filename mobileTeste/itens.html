@@ -13,14 +13,11 @@
   <nav class="navbar navbar-expand-lg bg-body-tertiary sticky-top shadow-sm">
     <div class="container-fluid">
       <button class="btn btn-outline-primary me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar" title="Menu"><i class="bi bi-list"></i></button>
-      <a class="navbar-brand fw-semibold d-flex align-items-center" href="dashboard.html">
+      <a class="navbar-brand fw-semibold d-flex align-items-center" href="index.html">
         <i class="bi bi-graph-up-arrow text-primary me-2"></i>Itens detalhados
-        <span id="empresaNomeBadge" class="badge text-bg-secondary ms-2 d-none" title="Empresa"></span>
       </a>
       <div class="d-flex align-items-center gap-2">
-        <select id="empresaTopSelect" class="form-select form-select-sm d-none d-md-inline-block" style="min-width:180px;"></select>
         <button id="themeToggle" class="btn btn-outline-secondary" type="button" title="Alternar tema"><i class="bi bi-circle-half"></i></button>
-        <button id="btnSignOut" class="btn btn-outline-danger btn-sm" type="button" title="Sair">Sair</button>
         <div class="rounded-circle bg-primary text-white fw-semibold d-inline-flex align-items-center justify-content-center" style="width:32px;height:32px;">PS</div>
       </div>
     </div>
@@ -32,18 +29,13 @@
       <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-      <div class="mb-3 d-md-none">
-        <label for="empresaTopSelectMobile" class="form-label small mb-1">Empresa</label>
-        <select id="empresaTopSelectMobile" class="form-select form-select-sm"></select>
-      </div>
       <ul class="list-unstyled small mb-3">
         <li class="mb-2 text-muted">Navegação</li>
-        <li class="mb-1"><a class="link-body-emphasis text-decoration-none" href="dashboard.html"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+        <li class="mb-1"><a class="link-body-emphasis text-decoration-none" href="index.html"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
         <li class="mb-1"><a class="link-body-emphasis text-decoration-none" href="acompanhamento.html"><i class="bi bi-graph-up me-2"></i>Acompanhamento de Vendas</a></li>
         <li class="mb-1"><a class="link-body-emphasis text-decoration-none" href="fechamento.html"><i class="bi bi-cash-coin me-2"></i>Fechamento de caixa</a></li>
         <li class="mb-1"><a class="link-body-emphasis text-decoration-none" href="itens.html"><i class="bi bi-list-ul me-2"></i>Itens detalhados</a></li>
       </ul>
-      <div class="mt-3 d-md-none"><button id="btnSignOutMobile" class="btn btn-outline-danger w-100" type="button">Sair</button></div>
     </div>
   </div>
 
