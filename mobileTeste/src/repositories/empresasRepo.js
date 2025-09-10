@@ -8,8 +8,8 @@ const TABLE_CANDIDATES = [
 ];
 
 const NAME_FIELDS = [
-  'CEMP_RAZAO', 'CEMP_FANTASIA', 'RAZAO_SOCIAL', 'NOME_FANTASIA',
-  'RAZAO', 'FANTASIA', 'NOME', 'nome', 'descricao', 'DESCRICAO'
+  'CEMP_NOME_FANTASIA', 'CEMP_FANTASIA', 'NOME_FANTASIA',
+  'CEMP_RAZAO', 'RAZAO_SOCIAL', 'RAZAO', 'FANTASIA', 'NOME', 'nome', 'descricao', 'DESCRICAO'
 ];
 
 function pickName(obj){
@@ -64,10 +64,14 @@ export async function fetchEmpresasRazaoByIds(ids){
   try{
     const { data, error } = await supabase
       .from('CADE_EMPRESA')
-      .select('CEMP_PK, CEMP_RAZAO')
+      .select('CEMP_PK, CEMP_NOME_FANTASIA, CEMP_FANTASIA, NOME_FANTASIA, CEMP_RAZAO')
       .in('CEMP_PK', ids);
     if (error) throw error;
-    return (data || []).map(r => ({ CEMP_PK: r?.CEMP_PK, name: r?.CEMP_RAZAO || null }));
+    return (data || []).map(r => ({
+      CEMP_PK: r?.CEMP_PK,
+      name: r?.CEMP_NOME_FANTASIA || r?.CEMP_FANTASIA || r?.NOME_FANTASIA || r?.CEMP_RAZAO || null,
+      razao: r?.CEMP_RAZAO || null
+    }));
   }catch(err){
     return [];
   }

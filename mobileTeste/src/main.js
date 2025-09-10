@@ -32,6 +32,7 @@ import { fetchEmpresasDoUsuario } from './repositories/authRepo.js';
 import { fetchEmpresasInfoByIds, fetchEmpresasRazaoByIds } from './repositories/empresasRepo.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+  try{ showDebugBanner(); }catch(_){ }
   // Aguarda autenticacao antes de iniciar a UI
   initAuth(() => {
   // Navbar: seletor de empresa + sair
@@ -154,15 +155,51 @@ function getSavedUser(){
   try { return JSON.parse(localStorage.getItem('appUser')||'null'); } catch { return null; }
 }
 
+function isDebugAuth(){
+  try{
+    if (typeof location !== 'undefined'){
+      const u = new URL(location.href);
+      if (u.searchParams.get('debug') === '1') return true;
+    }
+    if (typeof localStorage !== 'undefined'){
+      const v = localStorage.getItem('debug.auth');
+      if (v && /^(1|true|on)$/i.test(v)) return true;
+    }
+  }catch(_){ /* ignore */ }
+  return false;
+}
+
+function showDebugBanner(){
+  if (!isDebugAuth()) return;
+  const bar = document.createElement('div');
+  bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:1050;background:#0d6efd;color:#fff;padding:8px 12px;font:500 13px system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;display:flex;gap:8px;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,.15)';
+  bar.innerHTML = `
+    <span>Debug Auth ativo — detalhes no Console (F12). ?debug=1</span>
+    <div class="d-flex gap-2">
+      <button id="dbgAuthOff" class="btn btn-sm btn-light">Desativar</button>
+    </div>`;
+  document.body.appendChild(bar);
+  document.getElementById('dbgAuthOff')?.addEventListener('click', () => {
+    try{ localStorage.removeItem('debug.auth'); }catch{}
+    const u = new URL(location.href); u.searchParams.delete('debug');
+    location.replace(u.toString());
+  });
+  // Ajusta espaçamento para não cobrir topo
+  const cur = parseInt(getComputedStyle(document.body).paddingTop||'0',10) || 0;
+  document.body.style.paddingTop = (cur + 40) + 'px';
+}
+
 function updateEmpresaBadgeFromStorage(){
   try{
     const badge = document.getElementById('empresaNomeBadge');
     if (!badge) return;
     const saved = JSON.parse(localStorage.getItem('empresaAtual')||'null');
     const id = (saved?.CEMP_PK !== undefined && saved?.CEMP_PK !== null) ? String(saved.CEMP_PK) : '';
-    const name = saved?.name || saved?.CEMP_RAZAO || saved?.CEMP_FANTASIA || '';
+    const name = saved?.name || saved?.CEMP_NOME_FANTASIA || saved?.CEMP_FANTASIA || saved?.CEMP_RAZAO || '';
+    const razao = saved?.CEMP_RAZAO || '';
     if (name || id){
       badge.textContent = name ? `${name}${id?` (CEMP_PK ${id})`:''}` : `Empresa ${id}`;
+      if (razao) { try { badge.title = `Razão Social: ${razao}`; } catch(_){} }
       badge.classList.remove('d-none');
     } else {
       badge.textContent = '';
@@ -193,19 +230,25 @@ async function initEmpresaTopSelect(){
     return;
   }
 
-  const fillSelect = (sel, labelsMap) => {
+  const fillSelect = (sel, labelsMap, razoesMap) => {
     if (!sel) return;
     sel.innerHTML = '';
     empresas.forEach(e => {
       const opt = document.createElement('option');
       opt.value = String(e.CEMP_PK);
       const label = labelsMap?.get(String(e.CEMP_PK)) || labelsMap?.get(Number(e.CEMP_PK));
-      opt.textContent = label ? `${label} (CEMP_PK ${e.CEMP_PK})` : `Empresa ${e.CEMP_PK}`;
+      const fantasia = e?.CEMP_NOME_FANTASIA || e?.CEMP_FANTASIA || e?.NOME_FANTASIA || '';
+      const base = label || fantasia || `Empresa`;
+      // Exibir CEMP_PK e Nome Fantasia
+      opt.textContent = `${e.CEMP_PK} - ${base}`;
+      const razao = (razoesMap?.get(String(e.CEMP_PK)) || razoesMap?.get(Number(e.CEMP_PK)) || e?.CEMP_RAZAO || '').toString();
+      if (razao) opt.title = `Razão Social: ${razao}`;
       sel.appendChild(opt);
     });
   };
   // Busca nomes das empresas, se possível
   let labels = new Map();
+  let razoes = new Map();
   try{
     const ids = empresas.map(e => e.CEMP_PK).filter(v => v !== null && v !== undefined);
     const info = await fetchEmpresasInfoByIds(ids);
@@ -230,11 +273,16 @@ async function initEmpresaTopSelect(){
         labels.set(String(k), name);
         const num = Number(k); if (!Number.isNaN(num)) labels.set(num, name);
       }
+      const rz = row?.razao || '';
+      if (k !== undefined && k !== null && rz){
+        razoes.set(String(k), rz);
+        const num = Number(k); if (!Number.isNaN(num)) razoes.set(num, rz);
+      }
     });
   }catch(_){ /* ignore */ }
 
-  fillSelect(select, labels);
-  fillSelect(selectMobile, labels);
+  fillSelect(select, labels, razoes);
+  fillSelect(selectMobile, labels, razoes);
 
   let currentCemp = null;
   try {
@@ -254,10 +302,12 @@ async function initEmpresaTopSelect(){
   try{
     if (currentCemp){
       const label = labels.get(currentCemp) || labels.get(Number(currentCemp));
-      if (label){
+      const razao = razoes.get(currentCemp) || razoes.get(Number(currentCemp));
+      if (label || razao){
         const saved = JSON.parse(localStorage.getItem('empresaAtual')||'null') || {};
-        saved.name = label;
+        if (label) saved.name = label;
         saved.CEMP_PK = Number(currentCemp);
+        if (razao) saved.CEMP_RAZAO = razao;
         localStorage.setItem('empresaAtual', JSON.stringify(saved));
       }
     }
@@ -269,7 +319,11 @@ async function initEmpresaTopSelect(){
     const chosen = empresas.find(e => String(e.CEMP_PK) === String(CEMP_PK)) || { CEMP_PK };
     const label = labels.get(String(CEMP_PK)) || labels.get(Number(CEMP_PK));
     const payload = { ...chosen };
-    if (label) payload.name = label;
+    const fantasia = chosen?.CEMP_NOME_FANTASIA || chosen?.CEMP_FANTASIA || chosen?.NOME_FANTASIA || '';
+    const finalName = label || fantasia;
+    if (finalName) payload.name = finalName;
+    const rz = razoes.get(String(CEMP_PK)) || razoes.get(Number(CEMP_PK)) || chosen?.CEMP_RAZAO || '';
+    if (rz) payload.CEMP_RAZAO = rz;
     localStorage.setItem('empresaAtual', JSON.stringify(payload));
     if (select && select.value !== String(CEMP_PK)) select.value = String(CEMP_PK);
     if (selectMobile && selectMobile.value !== String(CEMP_PK)) selectMobile.value = String(CEMP_PK);

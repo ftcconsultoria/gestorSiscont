@@ -1,9 +1,16 @@
+const CACHE_NAME = 'app-cache-v3';
+
 self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
-  event.waitUntil(clients.claim());
+  event.waitUntil((async () => {
+    // Limpa caches antigos quando a versão muda
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)));
+    await clients.claim();
+  })());
 });
 
 // Only handle same-origin GET requests to avoid CORS noise in console
@@ -16,8 +23,21 @@ self.addEventListener('fetch', (event) => {
     // Let the browser handle cross-origin or non-GET requests
     if (!sameOrigin || req.method !== 'GET') return;
 
+    // Para documentos HTML, faz network-first para evitar HTML desatualizado
+    const isHTML = req.headers.get('accept')?.includes('text/html');
     event.respondWith(
-      caches.open('app-cache-v1').then(async (cache) => {
+      caches.open(CACHE_NAME).then(async (cache) => {
+        if (isHTML) {
+          try {
+            const fresh = await fetch(req);
+            try { cache.put(req, fresh.clone()); } catch(_) {}
+            return fresh;
+          } catch(_) {
+            const cached = await cache.match(req);
+            if (cached) return cached;
+            throw _;
+          }
+        }
         const cached = await cache.match(req);
         if (cached) return cached;
         try {
