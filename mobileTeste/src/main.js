@@ -190,6 +190,10 @@ async function loadPedidos(reset){
     state.hasMore = data.length === PAGE_SIZE;
   } catch (error){
     console.error('Erro ao carregar pedidos:', error);
+    // Evita loops de carregamento e informa ao usuário
+    state.hasMore = false;
+    const errEl = document.getElementById('listaAviso');
+    if (errEl) errEl.textContent = 'Erro ao carregar dados';
   }
 
   // Atualiza UI de paginação
