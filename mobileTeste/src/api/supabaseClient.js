@@ -31,6 +31,11 @@ const SUPABASE_ANON_KEY = resolveAnonKey() || DEFAULT_SUPABASE_ANON;
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Flag para habilitar/desabilitar consultas
+let supabaseEnabled = false;
+export function enableSupabase(){ supabaseEnabled = true; }
+export function isSupabaseEnabled(){ return supabaseEnabled; }
+
 // Utilidades de diagnóstico (não expõem a chave)
 export function getSupabaseConfigInfo(){
   let source = 'default';
@@ -46,6 +51,7 @@ export function getSupabaseConfigInfo(){
 }
 
 export async function probeLoginUser(email){
+  if (!isSupabaseEnabled()) return { foundExact:false, foundFallback:false, error:'disabled' };
   const out = { foundExact:false, foundFallback:false, error:null };
   try{
     const emailNorm = String(email||'').trim().toLowerCase();
@@ -66,6 +72,7 @@ export async function probeLoginUser(email){
 // Crie a tabela sugerida: public.dash_login_audit (id bigserial pk, ts timestamptz default now(), email text, success bool, reason text, user_id bigint null, user_agent text)
 // Garanta RLS/Policy permitindo INSERT para role anon somente nesses campos.
 export async function logAuthAttempt({ email, success, reason, userId }){
+  if (!isSupabaseEnabled()) return;
   try{
     const ua = (typeof navigator !== 'undefined' && navigator.userAgent) ? navigator.userAgent.slice(0,512) : '';
     const row = {

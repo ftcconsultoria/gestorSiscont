@@ -1,8 +1,9 @@
-import { supabase } from '../api/supabaseClient.js';
+import { supabase, isSupabaseEnabled } from '../api/supabaseClient.js';
 
 export const PAGE_SIZE = 200;
 
 export async function fetchPedidos({ di, df, from, to }){
+  if (!isSupabaseEnabled()) return [];
   let query = supabase
     .from('dash_pedidos_local')
     .select('*')

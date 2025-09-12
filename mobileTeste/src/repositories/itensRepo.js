@@ -1,7 +1,7 @@
-import { supabase } from '../api/supabaseClient.js';
+import { supabase, isSupabaseEnabled } from '../api/supabaseClient.js';
 
 export async function fetchItensByPedidos(pdocPks){
-  if (!pdocPks?.length) return [];
+  if (!isSupabaseEnabled() || !pdocPks?.length) return [];
   const chunk = (arr, size) => arr.reduce((acc, _, i) => (i % size ? acc : acc.concat([arr.slice(i, i + size)])), []);
   const chunks = chunk(pdocPks, 500);
   let itens = [];

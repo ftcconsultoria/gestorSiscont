@@ -1,4 +1,4 @@
-import { supabase } from '../api/supabaseClient.js';
+import { supabase, isSupabaseEnabled } from '../api/supabaseClient.js';
 
 const TABLE_CANDIDATES = [
   'CADE_EMPRESA',
@@ -22,7 +22,7 @@ function pickName(obj){
 }
 
 export async function fetchEmpresasInfoByIds(ids){
-  if (!ids?.length) return [];
+  if (!isSupabaseEnabled() || !ids?.length) return [];
 
   // Tenta obter nomes diretamente da tabela de vínculo, caso tenha colunas de nome
   try {
@@ -60,7 +60,7 @@ export async function fetchEmpresasInfoByIds(ids){
 
 // Busca diretamente na tabela CADE_EMPRESA os nomes (CEMP_RAZAO)
 export async function fetchEmpresasRazaoByIds(ids){
-  if (!ids?.length) return [];
+  if (!isSupabaseEnabled() || !ids?.length) return [];
   try{
     const { data, error } = await supabase
       .from('CADE_EMPRESA')

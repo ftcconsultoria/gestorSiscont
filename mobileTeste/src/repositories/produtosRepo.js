@@ -1,11 +1,11 @@
-import { supabase } from '../api/supabaseClient.js';
+import { supabase, isSupabaseEnabled } from '../api/supabaseClient.js';
 
 const PRODUCTS_TABLE = 'dash_produtos_local';
 const PRODUCT_PK_FIELD = 'EPRO_PK';
 const PRODUCT_NAME_FIELD = 'EPRO_DESCRICAO';
 
 export async function fetchProdutosByIds(ids){
-  if (!ids?.length) return [];
+  if (!isSupabaseEnabled() || !ids?.length) return [];
   // tenta na tabela principal
   let { data, error } = await supabase
     .from(PRODUCTS_TABLE)

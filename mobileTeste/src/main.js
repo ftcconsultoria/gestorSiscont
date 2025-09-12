@@ -21,6 +21,7 @@ import { renderSparkLine } from './ui/charts/sparkLine.js';
 
 import { aggregateByDate, aggregateByEmpresa, aggregateTopProdutos, aggregateByMonth } from './utils/aggregate.js';
 import { toNum, fmtBRL, toBRDateShort, brShortToISO } from './utils/format.js';
+import { enableSupabase } from './api/supabaseClient.js';
 
 // Config para métricas adicionais
 let ordersSparkRange = 7;
@@ -34,9 +35,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Eventos período e aplicar
   const dataIni = document.getElementById('dataInicio');
   const dataFim = document.getElementById('dataFim');
-  const btnConsultar = document.getElementById('btnConsultar');
   const btnMesAtual = document.getElementById('btnMesAtual');
-  if (btnConsultar) btnConsultar.addEventListener('click', () => loadPedidos(true));
+  const btnAtivar = document.getElementById('btnAtivarConsultas');
+  if (btnAtivar) btnAtivar.addEventListener('click', async () => { enableSupabase(); await loadPedidos(true); });
   if (btnMesAtual) btnMesAtual.addEventListener('click', () => {
     const isoFromDate = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     const now = new Date();
@@ -81,12 +82,6 @@ document.addEventListener('DOMContentLoaded', () => {
       applyAndRender();
     });
   }
-
-  // Botões paginar
-  const btnMore = document.getElementById('btnCarregarMais');
-  if (btnMore) btnMore.addEventListener('click', () => loadPedidos(false));
-  const btnAll = document.getElementById('btnCarregarTudo');
-  if (btnAll) btnAll.addEventListener('click', () => loadAllPedidos());
 
   // Bootstrap theme variable toggle (data-bs-theme)
   try{
